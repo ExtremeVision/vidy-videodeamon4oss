@@ -13,20 +13,19 @@
 
 #sample: sh deamon_oss.sh 161 video_test http://extremevision-cjcs.oss-cn-hangzhou.aliyuncs.com/test_folder/cjcs
 
+#init
+filepath="/usr/local/vidy-videodeamon4oss"
+filename=${filepath}"/files/framepos_"$1".txt"
+echo '0' > $filename
+#set $pos=0
+command="cat "${filename}
+pos=$($command) 
 
 #get current date and time.
 day=$(date +%d)
 month=$(date +%m)
 year=$(date +%Y)
 an_hour=$(date -d "1 hour ago" +%H)
-
-#init
-filepath="/usr/local/vidy-videodeamon4oss"
-filename=${filepath}"/files/framepos_"$1"_"${an_hour}"h.txt"
-echo '0' > $filename
-#set $pos=0
-command="cat "${filename}
-pos=$($command) 
 
 #init log file
 logfile=${filepath}"/files/log_"$1"_"${year}"-"${month}"-"${day}"-"${an_hour}".log"
@@ -55,8 +54,17 @@ do
 		break
 	fi
 	echo $video >> $logfile
+
+	pre_pos=-1
 	while [ $pos -lt $total_frame_num ]
 	do
+		# if $pre_pos==$pos, it means program exits unexpectedly and no new frame position recored.
+		if [ $pre_pos -eq $pos ]
+		then
+			break
+		fi
+		pre_pos=$pos
+
         	#[analysis process] [video address] [video date] [video hour] [frame position file] 
 		proc=$2" "$1" "$video" "$(date +"%Y%m%d")" "$an_hour" "$filename
 #                #excute
@@ -64,7 +72,7 @@ do
                 echo $proc >> $logfile
 		command="cat "${filename}
         	pos=$($command)
-		echo "POS:--------------"${pos} >> $logfile
+		echo "POS:--------------"${pos}
 	done
 done
 
